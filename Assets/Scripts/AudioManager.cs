@@ -44,22 +44,26 @@ public class AudioManager : MonoBehaviour
         UpdateUI();
     }
     
-    public void SetMusicVolume(float volume)
-    {
-        float mixerVolume = Mathf.Log10(volume) * 20;
-        
-        if (volume <= 0.001f) //  
-            mixerVolume = -80f;
-        
-        if (audioMixer != null)
-            audioMixer.SetFloat("MusicVolume", mixerVolume);
-        
-        if (musicSource != null)
-            musicSource.volume = volume;
-        
-        PlayerPrefs.SetFloat(MusicVolumeKey, volume);
-        PlayerPrefs.Save();
-    }
+  public void SetMusicVolume(float volume)
+{
+    
+    float normalizedVolume = volume / 100f;
+    
+    float mixerVolume = Mathf.Log10(normalizedVolume) * 20;
+    
+    if (normalizedVolume <= 0.001f) 
+        mixerVolume = -80f;
+    
+   
+    
+    
+    if (musicSource != null)
+        musicSource.volume = normalizedVolume;
+    
+    
+    PlayerPrefs.SetFloat(MusicVolumeKey, volume);
+    PlayerPrefs.Save();
+}
     
     public void ToggleMusic(bool isOn)
     {
@@ -85,42 +89,42 @@ public class AudioManager : MonoBehaviour
     }
     
     private void LoadAudioSettings()
+{
+    float savedVolume = PlayerPrefs.GetFloat(MusicVolumeKey, 70f);
+    
+    int musicEnabled = PlayerPrefs.GetInt(MusicEnabledKey, 1);
+    bool isMusicEnabled = musicEnabled == 1;
+    
+    SetMusicVolume(savedVolume);
+    
+    if (musicSource != null)
     {
-        float savedVolume = PlayerPrefs.GetFloat(MusicVolumeKey, 0.7f);
+        if (isMusicEnabled && !musicSource.isPlaying)
+            musicSource.Play();
+        else if (!isMusicEnabled && musicSource.isPlaying)
+            musicSource.Pause();
+    }
+}
+   private void UpdateUI()
+{
+    if (volumeSlider != null)
+    {
+        float savedVolume = PlayerPrefs.GetFloat(MusicVolumeKey, 70f);
         
-       
+        volumeSlider.minValue = 0f;
+        volumeSlider.maxValue = 100f;
+        volumeSlider.value = savedVolume;
+        
+        volumeSlider.onValueChanged.AddListener(SetMusicVolume);
+    }
+    
+    if (musicToggle != null)
+    {
         int musicEnabled = PlayerPrefs.GetInt(MusicEnabledKey, 1);
-        bool isMusicEnabled = musicEnabled == 1;
-        
-        SetMusicVolume(savedVolume);
-        
-        if (musicSource != null)
-        {
-            if (isMusicEnabled && !musicSource.isPlaying)
-                musicSource.Play();
-            else if (!isMusicEnabled && musicSource.isPlaying)
-                musicSource.Pause();
-        }
+        musicToggle.isOn = musicEnabled == 1;
+        musicToggle.onValueChanged.AddListener(ToggleMusic);
     }
-    
-    private void UpdateUI()
-    {
-    
-        if (volumeSlider != null)
-        {
-            float savedVolume = PlayerPrefs.GetFloat(MusicVolumeKey, 0.7f);
-            volumeSlider.value = savedVolume;
-            volumeSlider.onValueChanged.AddListener(SetMusicVolume);
-        }
-        
-       
-        if (musicToggle != null)
-        {
-            int musicEnabled = PlayerPrefs.GetInt(MusicEnabledKey, 1);
-            musicToggle.isOn = musicEnabled == 1;
-            musicToggle.onValueChanged.AddListener(ToggleMusic);
-        }
-    }
+}
     
    
   
